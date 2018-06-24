@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>待办事项</title>
+	<link rel="stylesheet" type="text/css" href="index.css">
+	<script type="text/javascript" src="vue.js"></script> 
+</head>
+<body>
+	<div id='box'>
+		<div class="tb">
+			<span @click='jtFn' v-bind:class='{active:classFn}'>﹀</span>
+			<input type="type" placeholder="请输入"  @keyup.enter='enterFn' v-model='inpVlue'>
+		</div>
+		<ul class="list">
+			<lis v-for='(item,index) in jsxs'
+				:key='index'
+				v-bind:index='index'
+				v-bind:check='item.checkZt'	
+				v-bind:cont='item.con'
+				v-on:check-fn='checkFn'
+				v-on:delete='deleteFn'
+			 ></lis> 
+		</ul>
+		<ul class="button">
+			<li>
+				共<span>{{nums}}</span>条
+				<button @click='allFn' :class='{active:xszt=="allFn"}' class="btnAll">全部</button>
+				<button @click='wxzFn' :class='{active:xszt=="wxzFn"}'>未选中</button>
+				<button @click='yxzFn' :class='{active:xszt=="yxzFn"}'>已选中</button>
+				<button @click='allDeleteFn' :class='{del:allDelFn}' class="btnDel">删除</button>
+			</li>
+		</ul>
+	</div>
+	<script>
+		//过滤展示
+		var filters = {
+			  allFn: function (it) {
+			    return it
+			  },
+			  wxzFn: function (it) {
+			    return it.filter(function (it) {
+			      return !it.checkZt
+			    })
+			  },
+			  yxzFn: function (it) {
+			    return it.filter(function (it) {
+			      return it.checkZt
+			    })
+			  }
+		}
+		Vue.component('lis',{
+			props:['check','cont','index'],
+			template:`<li>
+					<input type='checkbox' class='toggle' v-bind:checked='check' @click='$emit("check-fn",index)' >
+					<span>{{cont}}</span>
+					<button class="destroy" @click='$emit("delete",index)'>×</button>
+				</li>`
+		}) 
+		new Vue({
+			el:'#box',
+			data:{
+				listSz:[],
+				inpVlue:'',
+				xszt:'allFn' 
+			},
+			methods:{
+				enterFn:function(){
+					if(!this.inpVlue.trim()){alert('请输入要完成的工作');return;}
+					this.listSz.push({checkZt:false,con:this.inpVlue})
+					this.inpVlue=''
+				},
+				allFn:function(){this.xszt='allFn';},
+				wxzFn:function(){this.xszt='wxzFn';},
+				yxzFn:function(){this.xszt='yxzFn';},
+
+				checkFn:function(index){//单选操作 
+					this.listSz[index].checkZt=!this.listSz[index].checkZt; 
+				},
+				ztFn:function(zt,xsz){//选中的状态
+					this.listSz.forEach((it)=>{ 
+						if(it.checkZt==zt){
+							 xsz.push(it)
+						}
+					})
+				},
+				deleteFn:function(index){//单个删除
+					this.listSz.splice(index,1)
+				},
+				allDeleteFn:function(){//删除全部勾选数据
+					var allDelSz=[];
+					this.listSz.forEach((it)=>{ 
+						if(it.checkZt==false){ 
+							allDelSz.push(it)
+						}
+					})
+					this.listSz=allDelSz;
+				},
+				jtFn:function(){//全选与否  
+					//所有元素为true，返回true
+					var yszt=this.listSz.every((it)=>it.checkZt);
+					this.listSz.forEach((it)=>{
+						it.checkZt=!yszt; 
+					}) 
+				}
+			},
+			computed:{
+				nums:function(){//计算元素条数
+					return this.listSz.length;
+				},
+				jsxs:function(){//计算显示将要显示的内容
+					 return filters[this.xszt](this.listSz);
+				},
+				classFn:function(){//是否全部勾选
+					return !this.listSz.every((it)=>it.checkZt);
+				},
+				allDelFn:function(){//删除按钮显示与否
+					//如果有一个被选中就返回true
+					return !this.listSz.some((it)=>it.checkZt); 
+				}
+			}
+		})
+		
+	</script>
+</body>
+</html>
